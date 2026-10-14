@@ -22,6 +22,10 @@ public class OwnerService {
         return ownerRepository.findAll();
     }
 
+    public List<Owner> findOwnersByLastName(String lastName) {
+        return ownerRepository.findByLastNameStartingWithIgnoreCase(lastName);
+    }
+
     public Owner findOwner(Long ownerId) {
         return verifyOwnerExists(ownerId);
     }
