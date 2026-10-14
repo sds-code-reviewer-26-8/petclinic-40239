@@ -18,7 +18,7 @@ Spring PetClinic 변형 프로젝트(`petclinic-jpa`)로, JPA/H2 데이터 모�
 ./gradlew test --tests com.example.petclinic.PetclinicApplicationTests
 ```
 
-테스트: `PetclinicApplicationTests`(컨텍스트 로딩)와 `OwnerControllerTests`(MockMvc로 소유자 목록/검색 API 검증).
+테스트: `PetclinicApplicationTests`(컨텍스트 로딩)와 `OwnerControllerTests`, `PetControllerTests`(MockMvc로 소유자/동물 API 검증).
 
 ## 아키텍처
 
@@ -37,6 +37,12 @@ Spring PetClinic 변형 프로젝트(`petclinic-jpa`)로, JPA/H2 데이터 모�
   - `GET /api/v1/owners` : 모든 소유자 목록
   - `GET /api/v1/owners?lastname={값}` : 입력받은 `lastname` 값으로 시작하는 성(lastName)을 가진 소유자 목록. `kim`은 예시일 뿐 임의의 값을 받을 수 있음 (대소문자 무시, 결과 없으면 빈 배열, 빈 값이면 전체 목록)
   - 구현: `OwnerRepository.findByLastNameStartingWithIgnoreCase` -> `OwnerService.findOwnersByLastName` -> `OwnerController.list(@RequestParam lastname)`
+
+- **과제 2 – 생후 n년 미만 동물 조회 (예방접종 대상 선정)**
+  - `GET /api/v1/pets` : 모든 동물 목록
+  - `GET /api/v1/pets?year={n}&type={name}` : 현재 날짜 기준 생후 n년 미만(`birthDate > now - n년`)이고 종류 이름이 `type`인 동물 (종류는 대소문자 무시)
+  - `year`와 `type` 중 하나만 전달하면 서비스에서 `IllegalArgumentException`을 던지고, `GlobalExceptionHandler`가 HTTP 400으로 변환
+  - 구현: `PetRepository.findByTypeNameIgnoreCaseAndBirthDateAfter` -> `PetService.findPetsYoungerThan` -> `PetController.list(year, type)`
 
 ### 데이터 모델 참고
 
@@ -57,7 +63,7 @@ springdoc 의존성이 있으므로 실행 중에 Swagger UI(기본 경로 `/swa
 - 엔티티를 추가할 때는 기존 패턴(엔티티 -> 리포지토리 -> 서비스 -> DTO -> 컨트롤러)을 따르고, 필요하면 `LoadDatabase`에 시드 데이터를 추가합니다.
 - 생성자 주입을 사용하고 필드 `@Autowired`는 쓰지 않습니다.
 - 서비스는 읽기 전용 트랜잭션입니다. 쓰기 메서드를 추가하면 해당 메서드에 `@Transactional`을 따로 붙이세요.
-- 존재하지 않는 리소스는 `GlobalExceptionHandler`(`@RestControllerAdvice`)가 `NoSuchElementException`을 HTTP 404(`{status, error, message}`)로 변환합니다.
+- 존재하지 않는 리소스는 `GlobalExceptionHandler`(`@RestControllerAdvice`)가 `NoSuchElementException`을 HTTP 404, `IllegalArgumentException`을 HTTP 400(`{status, error, message}`)으로 변환합니다.
 - 주의: `Person` 단일 테이블을 Vet와 Owner가 공유하고 ID가 IDENTITY로 발급되므로, 시드 순서상 Vet는 1~6, Owner는 7~16번입니다. `/api/v1/owners/1`처럼 다른 타입의 ID를 조회하면 404가 됩니다.
 
 ## Git

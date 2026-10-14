@@ -5,6 +5,7 @@ import com.example.petclinic.repository.PetRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -20,6 +21,17 @@ public class PetService {
 
     public List<Pet> findPets() {
         return petRepository.findAll();
+    }
+
+    public List<Pet> findPetsYoungerThan(Integer year, String type) {
+        if (year == null && (type == null || type.isBlank())) {
+            return findPets();
+        }
+        if (year == null || type == null || type.isBlank()) {
+            throw new IllegalArgumentException("year and type must be provided together");
+        }
+        return petRepository.findByTypeNameIgnoreCaseAndBirthDateAfter(
+                type, LocalDateTime.now().minusYears(year));
     }
 
     public Pet findPet(Long petId) {
